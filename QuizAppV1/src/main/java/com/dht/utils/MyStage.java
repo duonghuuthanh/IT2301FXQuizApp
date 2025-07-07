@@ -5,6 +5,7 @@
 package com.dht.utils;
 
 import com.dht.quizappv1.App;
+import com.dht.utils.themes.ThemeManager;
 import java.io.IOException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -36,6 +37,8 @@ public class MyStage {
             scene = new Scene(new FXMLLoader(App.class.getResource(fxml)).load());
         else
             scene.setRoot(new FXMLLoader(App.class.getResource(fxml)).load());
+        
+        ThemeManager.applyTheme(scene);
         
         this.stage.setScene(scene);
         this.stage.show();
