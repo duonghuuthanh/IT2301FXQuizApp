@@ -20,17 +20,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -44,6 +52,8 @@ public class QuestionsController implements Initializable {
     @FXML private ComboBox<Category> cbCates;
     @FXML private ComboBox<Level> cbLevels;
     @FXML private VBox vboxChoices;
+    @FXML private TableView<Question> tbQuestions;
+    @FXML private TextField txtSearch;
     @FXML private ToggleGroup toggleChoice;
     
     private final static CategoryService cateSerivice = new CategoryService();
@@ -53,15 +63,29 @@ public class QuestionsController implements Initializable {
 
     /**
      * Initializes the controller class.
+     * @param url
+     * @param rb
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
             this.cbCates.setItems(FXCollections.observableList(cateSerivice.getCates()));
             this.cbLevels.setItems(FXCollections.observableList(levelService.getLevels()));
+            
+            this.loadColumns();
+            this.tbQuestions.setItems(FXCollections.observableList(questionService.getQuestions()));
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            MyAlert.getInstance().showMsg("Đã có lỗi xảy ra, lý do: " + ex.getMessage());
         }
+        
+        this.txtSearch.textProperty().addListener(e -> {
+            try {
+                this.tbQuestions.getItems().clear();
+                this.tbQuestions.setItems(FXCollections.observableList(questionService.getQuestions(this.txtSearch.getText())));
+            } catch (SQLException ex) {
+                Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+        });
     }    
     
     public void addChoice(ActionEvent event) {
@@ -100,5 +124,43 @@ public class QuestionsController implements Initializable {
             System.out.println(ex.getMessage());
             MyAlert.getInstance().showMsg("Them cau hoi that bai!");
         }
+    }
+    
+    private void loadColumns() {
+        TableColumn colId = new TableColumn("Id");
+        colId.setCellValueFactory(new PropertyValueFactory("id"));
+        colId.setPrefWidth(100);
+        
+        TableColumn colContent = new TableColumn("Nội dung câu hỏi");
+        colContent.setCellValueFactory(new PropertyValueFactory("content"));
+        colContent.setPrefWidth(300);
+        
+        TableColumn colAction = new TableColumn();
+        colAction.setCellFactory(e -> {
+            TableCell cell = new TableCell();
+            
+            Button btn = new Button("Xóa");
+            btn.setOnAction(event -> {
+                Optional<ButtonType> t = MyAlert.getInstance().showMsg("Xóa câu hỏi sẽ xóa luôn các lựa chọn của nó. Bạn chắc chắn xóa?", Alert.AlertType.CONFIRMATION);
+                if (t.isPresent() && t.get().equals(ButtonType.OK)) {
+                    try {
+                        Question q = (Question)cell.getTableRow().getItem();
+                        if (questionService.deletQuestion(q.getId())) {
+                            MyAlert.getInstance().showMsg("Xóa câu hỏi thành công!");
+                            this.tbQuestions.getItems().remove(q);
+                        } else
+                             MyAlert.getInstance().showMsg("Xóa câu hỏi thất bại!", Alert.AlertType.ERROR);
+                    } catch (SQLException ex) {
+                        MyAlert.getInstance().showMsg("Hệ thống có lỗi, lý do: " + ex.getMessage(), Alert.AlertType.ERROR);
+                    }
+                }
+            });
+            
+            cell.setGraphic(btn);
+            
+            return cell;
+        });
+        
+        this.tbQuestions.getColumns().addAll(colId, colContent, colAction);
     }
 }

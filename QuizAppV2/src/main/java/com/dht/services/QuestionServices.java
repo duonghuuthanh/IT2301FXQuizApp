@@ -4,18 +4,94 @@
  */
 package com.dht.services;
 
+import com.dht.pojo.Choice;
 import com.dht.pojo.Question;
 import com.dht.utils.JdbcConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author admin
  */
 public class QuestionServices {
+    
+    public List<Question> getQuestions() throws SQLException {
+        Connection conn = JdbcConnection.getInstance().connect(); 
+
+        Statement stm = conn.createStatement();
+        ResultSet rs = stm.executeQuery("SELECT * FROM question");
+
+        List<Question> questions = new ArrayList<>();
+        while (rs.next()) {
+            Question q = new Question.Builder(rs.getInt("id"), rs.getString("content")).build();
+
+            questions.add(q);
+        }
+        
+        return questions;
+    }
+    
+    public List<Question> getQuestions(String kw) throws SQLException {
+        Connection conn = JdbcConnection.getInstance().connect(); 
+
+        PreparedStatement stm = conn.prepareCall("SELECT * FROM question WHERE content like concat('%', ?, '%')");
+        stm.setString(1, kw);
+        
+        ResultSet rs = stm.executeQuery();
+
+        List<Question> questions = new ArrayList<>();
+        while (rs.next()) {
+            Question q = new Question.Builder(rs.getInt("id"), rs.getString("content")).build();
+
+            questions.add(q);
+        }
+        
+        return questions;
+    }
+    
+    public List<Question> getQuestions(int num) throws SQLException {
+        Connection conn = JdbcConnection.getInstance().connect(); 
+
+        PreparedStatement stm = conn.prepareCall("SELECT * FROM question ORDER BY rand() LIMIT ?");
+        stm.setInt(1, num);
+        
+        ResultSet rs = stm.executeQuery();
+
+        List<Question> questions = new ArrayList<>();
+        while (rs.next()) {
+            Question q = new Question.Builder(rs.getInt("id"), rs.getString("content"))
+                    .addAllChoices(this.getChoicesByQuestionId(rs.getInt("id"))).build();
+
+            questions.add(q);
+        }
+        
+        return questions;
+    }
+    
+    public List<Choice> getChoicesByQuestionId(int questionId) throws SQLException {
+        Connection conn = JdbcConnection.getInstance().connect(); 
+
+        PreparedStatement stm = conn.prepareCall("SELECT * FROM choice WHERE question_id=?");
+        stm.setInt(1, questionId);
+        
+        ResultSet rs = stm.executeQuery();
+
+        List<Choice> choices = new ArrayList<>();
+        while (rs.next()) {
+            Choice c = new Choice(rs.getInt("id"), rs.getString("content"), rs.getBoolean("is_correct"));
+
+            choices.add(c);
+        }
+        
+        return choices;
+    }
+    
     public void addQuestion(Question q) throws SQLException, Exception {
         Connection conn = JdbcConnection.getInstance().connect();
         conn.setAutoCommit(false);
@@ -33,7 +109,7 @@ public class QuestionServices {
             if (rs.next())
                 questionId = rs.getInt(1);
             else
-                throw new Exception("Chen cau hoi khong thanh cong!");
+                throw new Exception("Chèn câu hỏi không thành công!");
             
             sql = "INSERT INTO choice(content, is_correct, question_id) VALUES(?, ?, ?)";
             stm = conn.prepareCall(sql);
@@ -49,5 +125,14 @@ public class QuestionServices {
             conn.commit();
         } else
             conn.rollback();
+    }
+    
+    public boolean deletQuestion(int questionId) throws SQLException {
+        Connection conn = JdbcConnection.getInstance().connect(); 
+
+        PreparedStatement stm = conn.prepareCall("DELETE FROM question WHERE id=?");
+        stm.setInt(1, questionId);
+        
+        return stm.executeUpdate() > 0;
     }
 }
