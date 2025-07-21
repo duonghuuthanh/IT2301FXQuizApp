@@ -48,6 +48,11 @@ public class Question {
             this.level = l;
         }
         
+        public Builder(int id, String content) {
+            this.id = id;
+            this.content = content;
+        }
+        
         public Builder addHint(String h) {
             this.hint = h;
             return this;
@@ -60,6 +65,11 @@ public class Question {
         
         public Builder addChoice(Choice c) {
             this.choies.add(c);
+            return this;
+        }
+        
+        public Builder addAllChoices(List<Choice> choices) {
+            this.choies.addAll(choices);
             return this;
         }
         
