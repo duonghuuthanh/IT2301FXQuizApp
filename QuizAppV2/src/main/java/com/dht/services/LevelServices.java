@@ -8,6 +8,7 @@ import com.dht.pojo.Category;
 import com.dht.pojo.Level;
 import com.dht.utils.JdbcConnection;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,13 +19,15 @@ import java.util.List;
  *
  * @author admin
  */
-public class LevelServices {
-    public List<Level> getLevels() throws SQLException {
-        Connection conn = JdbcConnection.getInstance().connect(); 
+public class LevelServices extends BaseService<Level> {
 
-        Statement stm = conn.createStatement();
-        ResultSet rs = stm.executeQuery("SELECT * FROM level");
+    @Override
+    public PreparedStatement getStm(Connection conn) throws SQLException {
+        return conn.prepareCall("SELECT * FROM level");
+    }
 
+    @Override
+    public List<Level> getResults(ResultSet rs) throws SQLException {
         List<Level> levels = new ArrayList<>();
         while (rs.next()) {
             Level c = new Level(rs.getInt("id"), rs.getString("name"), rs.getString("note"));
