@@ -20,4 +20,7 @@ public class MyConfigs {
     public static final LevelServices levelService = new LevelServices();
     public static final CategoryService cateSerivice = new CategoryService();
     
+    public static final int NUM_QUESTIONS = 10;
+    public static final double[] RATES = {0.2, 0.4, 0.4};
+    
 }
