@@ -9,7 +9,10 @@ import com.dht.pojo.Choice;
 import com.dht.pojo.Level;
 import com.dht.pojo.Question;
 import com.dht.services.CategoryService;
+import com.dht.services.FlyweightFactory;
 import com.dht.services.LevelServices;
+import com.dht.services.questions.BaseQuestionServices;
+import com.dht.services.questions.KeywordQuestionDecorator;
 import com.dht.services.questions.QuestionServices;
 import com.dht.utils.Configs;
 import com.dht.utils.MyAlert;
@@ -60,18 +63,19 @@ public class QuestionsController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            this.cbCates.setItems(FXCollections.observableList(Configs.cateService.getCates()));
-            this.cbLevel.setItems(FXCollections.observableList(Configs.lvlService.getLevels()));
+            this.cbCates.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.quesService, "categories")));
+            this.cbLevel.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.lvlService, "levels")));
             
             this.loadColumns();
-            this.tbQuestions.setItems(FXCollections.observableList(Configs.quesService.getQuestions()));
+            this.tbQuestions.setItems(FXCollections.observableList(Configs.quesService.list()));
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
         }
         
         this.txtSearch.textProperty().addListener(e -> {
             try {
-                this.tbQuestions.setItems(FXCollections.observableList(Configs.quesService.getQuestions(this.txtSearch.getText())));
+                BaseQuestionServices s = new KeywordQuestionDecorator(Configs.quesService, this.txtSearch.getText());
+                this.tbQuestions.setItems(FXCollections.observableList(s.list()));
             } catch (SQLException ex) {
                 Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }
@@ -135,7 +139,7 @@ public class QuestionsController implements Initializable {
                     Question q = (Question)cell.getTableRow().getItem();
                     
                     try {
-                        if (Configs.quesService.deleteQuestion(q.getId()) == true) {
+                        if (Configs.quesService.deletQuestion(q.getId()) == true) {
                             MyAlert.getInstance().showMsg("Xóa câu hỏi thành công!");
                             this.tbQuestions.getItems().remove(q);
                         } else
