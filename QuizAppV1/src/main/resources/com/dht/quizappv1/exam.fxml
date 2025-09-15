@@ -22,8 +22,8 @@
       <ListView fx:id="lvQuestions" prefHeight="521.0" prefWidth="580.0" />
       <HBox prefHeight="100.0" prefWidth="200.0" styleClass="Main">
          <children>
-            <Button mnemonicParsing="false" text="Chấm điểm" />
-            <Button mnemonicParsing="false" text="Lưu bài thi" />
+            <Button mnemonicParsing="false" onAction="#markHandle" text="Chấm điểm" />
+            <Button mnemonicParsing="false" onAction="#saveHandle" text="Lưu bài thi" />
          </children>
       </HBox>
    </children>

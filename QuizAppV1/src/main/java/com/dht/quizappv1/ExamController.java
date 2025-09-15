@@ -4,13 +4,19 @@
  */
 package com.dht.quizappv1;
 
+import com.dht.pojo.Choice;
 import com.dht.pojo.Question;
 import com.dht.services.exam.ExamStrategy;
 import com.dht.services.exam.ExamTypes;
 import com.dht.services.exam.FixedStrategy;
 import com.dht.services.exam.SpecificStrategy;
+import com.dht.utils.MyAlert;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +24,8 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -36,6 +44,9 @@ public class ExamController implements Initializable {
     @FXML private ComboBox<ExamTypes> cbTypes;
     @FXML private ListView<Question> lvQuestions;
     @FXML private TextField txtNum;
+    private Map<Integer, Choice> answers = new HashMap<>();
+    private List<Question> questions;
+    private ExamStrategy s;
 
     /**
      * Initializes the controller class.
@@ -73,6 +84,15 @@ public class ExamController implements Initializable {
                         RadioButton r = new RadioButton(c.getContent());
                         r.setToggleGroup(g);
                         
+                        // bổ sung update UI
+                        if (answers.get(q.getId()) == c)
+                            r.setSelected(true);
+                        
+                        r.setOnAction(evt -> {
+                            if (r.isSelected())
+                                answers.put(q.getId(), c);
+                        });
+                        
                         v.getChildren().add(r);
                     }
                     
@@ -84,13 +104,35 @@ public class ExamController implements Initializable {
     }    
     
     public void startHandle(ActionEvent e) {
-        ExamStrategy s = new FixedStrategy();
+        s = new FixedStrategy();
         if (this.cbTypes.getSelectionModel().getSelectedItem() == ExamTypes.SPECIFIC)
             s = new SpecificStrategy(Integer.parseInt(this.txtNum.getText()));
         try {
-            this.lvQuestions.setItems(FXCollections.observableList(s.getQuestions()));
+            this.questions = s.getQuestions();
+            this.lvQuestions.setItems(FXCollections.observableList(this.questions));
         } catch (SQLException ex) {
             Logger.getLogger(ExamController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void markHandle(ActionEvent e) {
+        int count = 0;
+        for (var c: answers.values())
+            if (c.isCorrect())
+                count++;
+        
+        MyAlert.getInstance().showMsg(String.format("Bạn làm đúng %d/%d!", count, questions.size()));
+    }
+    
+    public void saveHandle(ActionEvent e) {
+        Optional<ButtonType> t = MyAlert.getInstance().showMsg("Bạn chắc chắn lưu đề thi?", Alert.AlertType.CONFIRMATION);
+        if (t.isPresent() && t.get() == ButtonType.OK) {
+            try {
+                s.saveExam(this.questions);
+                MyAlert.getInstance().showMsg("Đề thi lưu thành công!");
+            } catch (SQLException ex) {
+                MyAlert.getInstance().showMsg("Đề thi lưu thất bại, lý do: " + ex.getMessage(), Alert.AlertType.ERROR);
+            }
         }
     }
 }
