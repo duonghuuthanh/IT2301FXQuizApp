@@ -18,7 +18,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"));
+        scene = new Scene(loadFXML("exam"));
         stage.setScene(scene);
         stage.setTitle("Quiz App");
         stage.show();
@@ -26,7 +26,7 @@ public class App extends Application {
 
     @Override
     public void stop() throws Exception {
-        super.stop(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+        super.stop(); 
         
         JdbcConnector.getInstance().close();
     }

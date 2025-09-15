@@ -12,10 +12,10 @@ import java.util.List;
  *
  * @author admin
  */
-public class LimitedQuestionServices extends  QuestionDecorator {
+public class LimitedQuestionServicesDecorator extends  QuestionDecorator {
     private int num;
 
-    public LimitedQuestionServices(BaseQuestionServices decorator, int num) {
+    public LimitedQuestionServicesDecorator(BaseQuestionServices decorator, int num) {
         super(decorator);
         this.num = num;
     }

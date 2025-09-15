@@ -17,5 +17,6 @@ public class Configs {
     public static final CategoryService cateService = new CategoryService();
     public static final QuestionServices quesService = new QuestionServices();
     public static final LevelServices lvlService = new LevelServices();
-    
+    public static final int NUM_QUES = 10;
+    public static final double[] RATES = {0.4, 0.4, 0.2};
 }

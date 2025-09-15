@@ -11,7 +11,7 @@ import com.dht.services.FlyweightFactory;
 import com.dht.services.questions.BaseQuestionServices;
 import com.dht.services.questions.CategoryQuestionDecorator;
 import com.dht.services.questions.LevelQuestionDecorator;
-import com.dht.services.questions.LimitedQuestionServices;
+import com.dht.services.questions.LimitedQuestionServicesDecorator;
 import com.dht.utils.Configs;
 import java.net.URL;
 import java.sql.SQLException;
@@ -74,7 +74,7 @@ public class PracticeController implements Initializable {
             if (l != null)
                 s = new LevelQuestionDecorator(s, l.getId());
             
-            s = new LimitedQuestionServices(s, num);
+            s = new LimitedQuestionServicesDecorator(s, num);
             this.questions = s.list();
             
             this.currentQuestion = 0;
